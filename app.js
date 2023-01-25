@@ -5,7 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet"; //-----> Helmet is Express middleware. Helmet helps you secure your Express apps by setting various HTTP headers
 import morgan from "morgan";
-
+import { register } from "./controllers/auth.js";
 
 /* CONFIGURATIONS */
 dotenv.config();
@@ -21,6 +21,7 @@ app.use(cors());
 
 
 /* ROUTES */
+app.post("/auth/register", register);
 
 
 
