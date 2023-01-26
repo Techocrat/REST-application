@@ -127,3 +127,29 @@ export const update = async (req, res) => {
     res.status(500).json({ err: err.message });
   }
 };
+
+//  users viewing non-admin users
+
+export const view = async (req, res) => {
+try {
+  const userId = req.params.id;
+  const user= await User.find({ _id: userId }).select({
+    firstName: 1,
+    middleName: 1,
+    lastName: 1,
+    email: 1,
+    department: 1,
+  });
+  
+  if(!user) {
+    return res.status(400).json({ error: "User not found!" });
+  }
+  if(user.role === "admin") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  res.json(user);
+}
+catch (err) {
+  res.status(500).json({ err: err.message });
+}
+};
