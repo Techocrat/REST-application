@@ -6,16 +6,15 @@ import User from "../models/User.js";
 export const register = async (req, res) => {
   try {
     // check if all mandatory fields are present
-    const { firstName, lastName, email, password, confirmPassword, role } =
+    const { firstName, lastName, email, password, confirmPassword, role} =
       req.body;
     if (
       !firstName ||
       !lastName ||
       !email ||
       !password ||
-      !confirmPassword ||
-      !role
-    ) {
+      !confirmPassword||
+      !role) {
       return res
         .status(400)
         .json({ error: "All mandatory fields are required" });
@@ -61,4 +60,33 @@ export const register = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
+};
+
+export const login = async (req, res) => {
+try {
+    const { email, password } = req.body;
+
+    // check if all mandatory fields are present
+    if (!email || !password) {
+        return res
+            .status(400)
+            .json({ error: "All mandatory fields are required" });
+    }
+
+    // check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)  return res.status(400).json({ error: "Invalid credentials." });
+
+    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, { expiresIn: "1h" });
+    delete user.password;
+
+    res.status(200).json({ user, token });
+
+} catch (err) {
+}
 };
