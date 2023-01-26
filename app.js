@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import helmet from "helmet"; //-----> Helmet is Express middleware. Helmet helps you secure your Express apps by setting various HTTP headers
 import morgan from "morgan";
 import { Server } from "socket.io";
-import UserLog  from "./models/UserLog.js";
+import UserLog from "./models/UserLog.js";
 
 import {
   register,
@@ -33,10 +33,6 @@ const io = new Server(4000);
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   console.log(socket.handshake.query.uid);
-  // const userLog = new UserLog({
-  //     username: socket.handshake.query.email,
-  //     userId: socket.handshake.query.uid
-  // });
 
   socket.on("login", async (data) => {
     console.log(data);

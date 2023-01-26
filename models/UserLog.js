@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
+import moment from "moment-timezone";
 const UserlogSchema = new mongoose.Schema({
    email: {
     type:String
    },
    loggedIn: {  
-    type: Date,
-    default: Date.now()
+    type: String,
+    default: moment().tz("Asia/Kolkata").format()
     }
 });
 
