@@ -30,14 +30,13 @@ export const verifyToken = async (req, res, next) => {
 };
 
 export const verifyAdminApiAuthHandler = async (req, res, next) => {
-    try {
-        if(req.user.role === "admin"){
-            next();
-        } else {
-            return res.status(403).send("Access Denied");
-        }
-    } catch (err) { 
-        res.status(500).json({ error: err.message });
+  try {
+    if (req.user.role === "admin") {
+      next();
+    } else {
+      return res.status(403).send("Access Denied");
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
-

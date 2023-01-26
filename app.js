@@ -5,7 +5,17 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet"; //-----> Helmet is Express middleware. Helmet helps you secure your Express apps by setting various HTTP headers
 import morgan from "morgan";
-import { register, login, update, updateAdmin, view, viewAdmins } from "./controllers/auth.js";
+import { Server } from "socket.io";
+import UserLog  from "./models/UserLog.js";
+
+import {
+  register,
+  login,
+  update,
+  updateAdmin,
+  view,
+  viewAdmins,
+} from "./controllers/auth.js";
 import { verifyToken, verifyAdminApiAuthHandler } from "./middleware/auth.js";
 
 /* CONFIGURATIONS */
@@ -18,24 +28,56 @@ app.use(morgan("common"));
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
+const io = new Server(4000);
 
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+  console.log(socket.handshake.query.uid);
+  // const userLog = new UserLog({
+  //     username: socket.handshake.query.email,
+  //     userId: socket.handshake.query.uid
+  // });
 
+  socket.on("login", async (data) => {
+    console.log(data);
+    const userLog = await UserLog.create({
+      username: data.email,
+      userId: data.uid,
+    });
+
+    console.log(userLog);
+  });
+});
 
 /* ROUTES */
+
+// registering users and admins
 app.post("/api/v1/auth/register", register);
+
+// login users and admins
 app.post("/api/v1/login", login);
 
 // updating other users and himself
 app.put("/api/v1/user/update/:id", verifyToken, update);
 
 // updating other admins and himself
-app.put("/api/v1/admin/update/:id", verifyToken, verifyAdminApiAuthHandler, updateAdmin);
+app.put(
+  "/api/v1/admin/update/:id",
+  verifyToken,
+  verifyAdminApiAuthHandler,
+  updateAdmin
+);
 
 // user viewing all users
 app.get("/api/v1/user/:id", verifyToken, view);
 
 // admin viewing all users
-app.get("/api/v1/admin/:id", verifyToken, verifyAdminApiAuthHandler,viewAdmins);
+app.get(
+  "/api/v1/admin/:id",
+  verifyToken,
+  verifyAdminApiAuthHandler,
+  viewAdmins
+);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;
