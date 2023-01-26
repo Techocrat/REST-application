@@ -97,7 +97,7 @@ export const login = async (req, res) => {
   }
 };
 
-// update user / admin details
+// update user  details
 export const update = async (req, res) => {
   try {
     // update details
@@ -112,12 +112,12 @@ export const update = async (req, res) => {
 
     // check if user exists
 
-    const user = await User.findOne({ _id: userId });
+    const user = await User.findOne({ _id: userId , role: "user" });
     if (!user) {
       return res.status(400).json({ error: "User not found!" });
     }
 
-    User.updateOne({ _id: userId }, { $set: setQuery }, (err, result) => {
+    User.updateOne({ _id: userId, role: "user" }, { $set: setQuery }, (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       return res.json({ message: "User updated successfully" });
     });
@@ -125,6 +125,34 @@ export const update = async (req, res) => {
     res.status(500).json({ err: err.message });
   }
 };
+
+// admins updating admin
+
+export const updateAdmin = async (req, res) => {
+  try {
+    const { firstName, middleName, lastName, email, department } = req.body;
+    const userId = req.params.id;
+    let setQuery = {};
+    if (firstName) setQuery.firstName = firstName;
+    if (middleName) setQuery.middleName = middleName;
+    if (lastName) setQuery.lastName = lastName;
+    if (email) setQuery.email = email;
+    if (department) setQuery.department = department;
+
+    // check if user exists
+
+    const user = await User.findOne({ _id: userId , role: "admin"});
+    if (!user) {
+      return res.status(400).json({ error: "Admin not found!" });
+    }
+
+    User.updateOne({ _id: userId,  role : "admin"}, { $set: setQuery }, (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      return res.json({ message: "Admin updated successfully" });
+    });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }};
 
 //   View users
 
@@ -173,3 +201,4 @@ export const viewAdmins = async (req, res) => {
     res.status(500).json({ err: err.message });
   }
 };
+
