@@ -5,7 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet"; //-----> Helmet is Express middleware. Helmet helps you secure your Express apps by setting various HTTP headers
 import morgan from "morgan";
-import { register, login, update, view } from "./controllers/auth.js";
+import { register, login, update, view, viewAdmins } from "./controllers/auth.js";
 import { verifyToken, verifyAdminApiAuthHandler } from "./middleware/auth.js";
 
 /* CONFIGURATIONS */
@@ -25,10 +25,10 @@ app.use(cors());
 app.post("/api/v1/auth/register", register);
 app.post("/api/v1/login", login);
 app.put("/api/v1/user/update/:id", verifyToken, update);
+// user viewing all users
 app.get("/api/v1/user/:id", verifyToken, view);
-
-
-
+// admin viewing all users
+app.get("/api/v1/admin/:id", verifyToken, verifyAdminApiAuthHandler,viewAdmins);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;

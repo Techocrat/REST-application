@@ -69,32 +69,30 @@ export const login = async (req, res) => {
     // check if all mandatory fields are present
     if (!email || !password) {
       return res
-      .status(400)
-      .json({ error: "All mandatory fields are required" });
+        .status(400)
+        .json({ error: "All mandatory fields are required" });
     }
-    
+
     // check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-    return res.status(400).json({ error: "Invalid credentials." });
+      return res.status(400).json({ error: "Invalid credentials." });
 
-    const token = jwt.sign(
-      { id: user._id},
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-      );
-      console.log(email, password)
-    
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    console.log(email, password);
+
     delete user.password;
 
     res.status(200).json({ user, token });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -114,7 +112,7 @@ export const update = async (req, res) => {
 
     // check if user exists
 
-    const user = await User.find({ _id: userId });
+    const user = await User.findOne({ _id: userId });
     if (!user) {
       return res.status(400).json({ error: "User not found!" });
     }
@@ -128,28 +126,50 @@ export const update = async (req, res) => {
   }
 };
 
-//  users viewing non-admin users
+//   View users
 
 export const view = async (req, res) => {
-try {
-  const userId = req.params.id;
-  const user= await User.find({ _id: userId }).select({
-    firstName: 1,
-    middleName: 1,
-    lastName: 1,
-    email: 1,
-    department: 1,
-  });
-  
-  if(!user) {
-    return res.status(400).json({ error: "User not found!" });
+  try {
+    const userId = req.params.id;
+    const user = await User.findOne({ _id: userId, role: "user" }).select({
+      firstName: 1,
+      middleName: 1,
+      lastName: 1,
+      email: 1,
+      department: 1,
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "User not found!" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ err: err.message });
   }
-  if(user.role === "admin") {
-    return res.status(401).json({ error: "Unauthorized" });
+};
+
+// admins viewing admins
+
+export const viewAdmins = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    console.log("USER ID ", userId);
+    const user = await User.findOne({ _id: userId, role: "admin" }).select({
+      firstName: 1,
+      middleName: 1,
+      lastName: 1,
+      email: 1,
+      department: 1,
+      role: 1,
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Admin not found!" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ err: err.message });
   }
-  res.json(user);
-}
-catch (err) {
-  res.status(500).json({ err: err.message });
-}
 };
