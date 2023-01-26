@@ -6,15 +6,16 @@ import User from "../models/User.js";
 export const register = async (req, res) => {
   try {
     // check if all mandatory fields are present
-    const { firstName, lastName, email, password, confirmPassword, role} =
+    const { firstName, lastName, email, password, confirmPassword, role } =
       req.body;
     if (
       !firstName ||
       !lastName ||
       !email ||
       !password ||
-      !confirmPassword||
-      !role) {
+      !confirmPassword ||
+      !role
+    ) {
       return res
         .status(400)
         .json({ error: "All mandatory fields are required" });
@@ -63,30 +64,66 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-try {
+  try {
     const { email, password } = req.body;
-
     // check if all mandatory fields are present
     if (!email || !password) {
-        return res
-            .status(400)
-            .json({ error: "All mandatory fields are required" });
+      return res
+      .status(400)
+      .json({ error: "All mandatory fields are required" });
     }
-
+    
     // check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-        return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: "Invalid email or password" });
     }
-
+    
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)  return res.status(400).json({ error: "Invalid credentials." });
+    if (!isMatch)
+    return res.status(400).json({ error: "Invalid credentials." });
 
-    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { id: user._id},
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+      );
+      console.log(email, password)
+    
     delete user.password;
 
     res.status(200).json({ user, token });
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ error: err.message });
+  }
+};
 
-} catch (err) {
-}
+// update user / admin details
+export const update = async (req, res) => {
+  try {
+    // update details
+    const { firstName, middleName, lastName, email, department } = req.body;
+    const userId = req.params.id;
+    let setQuery = {};
+    if (firstName) setQuery.firstName = firstName;
+    if (middleName) setQuery.middleName = middleName;
+    if (lastName) setQuery.lastName = lastName;
+    if (email) setQuery.email = email;
+    if (department) setQuery.department = department;
+
+    // check if user exists
+
+    const user = await User.find({ _id: userId });
+    if (!user) {
+      return res.status(400).json({ error: "User not found!" });
+    }
+
+    User.updateOne({ _id: userId }, { $set: setQuery }, (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      return res.json({ message: "User updated successfully" });
+    });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
 };
