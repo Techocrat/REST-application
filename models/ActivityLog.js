@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const UserSchema = new mongoose.Schema({
+const UpdateSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: false,
@@ -15,7 +15,6 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
     required: false,
   },
   role: {
@@ -36,7 +35,7 @@ const ActivityLogSchema = new mongoose.Schema({
   userName: {
     type: String,
   },
-  fieldOldValue: { type: UserSchema },
-  fieldNewValue: { type: UserSchema },
+  fieldOldValue: { type: UpdateSchema },
+  fieldNewValue: { type: UpdateSchema },
 });
 export default mongoose.model("ActivityLog", ActivityLogSchema);

@@ -5,18 +5,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet"; //-----> Helmet is Express middleware. Helmet helps you secure your Express apps by setting various HTTP headers
 import morgan from "morgan";
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/user.js";
+import adminRoutes from "./routes/admin.js";
 import { Server } from "socket.io";
 import UserLog from "./models/UserLog.js";
 
-import {
-  register,
-  login,
-  update,
-  updateAdmin,
-  view,
-  viewAdmins,
-} from "./controllers/auth.js";
-import { verifyToken, verifyAdminApiAuthHandler } from "./middleware/auth.js";
+
 
 /* CONFIGURATIONS */
 dotenv.config();
@@ -47,33 +42,16 @@ io.on("connection", (socket) => {
 
 /* ROUTES */
 
-// registering users and admins
-app.post("/api/v1/auth/register", register);
+// registering and login
+app.use("/api/v1/auth", authRoutes);
 
-// login users and admins
-app.post("/api/v1/login", login);
+// all user related routes
+app.use("/api/v1/user", userRoutes);
 
-// updating other users and himself
-app.put("/api/v1/user/update/:id", verifyToken, update);
+// all admin related routes
+app.use("/api/v1/admin", adminRoutes);
 
-// updating other admins and himself
-app.put(
-  "/api/v1/admin/update/:id",
-  verifyToken,
-  verifyAdminApiAuthHandler,
-  updateAdmin
-);
 
-// user viewing all users
-app.get("/api/v1/user/:id", verifyToken, view);
-
-// admin viewing all users
-app.get(
-  "/api/v1/admin/:id",
-  verifyToken,
-  verifyAdminApiAuthHandler,
-  viewAdmins
-);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;

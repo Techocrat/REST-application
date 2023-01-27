@@ -1,9 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Socket } from "net";
 import User from "../models/User.js";
 import { io } from "socket.io-client";
-import ActivityLog from "../models/ActivityLog.js";
 
 const socket = io("ws://localhost:4000");
 
@@ -13,6 +11,8 @@ export const register = async (req, res) => {
     // check if all mandatory fields are present
     const { firstName, lastName, email, password, confirmPassword, role } =
       req.body;
+
+      
     if (
       !firstName ||
       !lastName ||
@@ -25,6 +25,11 @@ export const register = async (req, res) => {
         .status(400)
         .json({ error: "All mandatory fields are required" });
     }
+
+    //check if email already exists
+    
+
+
 
     // check if password meets the required length
     if (password.length < 6 || password.length > 12) {
@@ -100,190 +105,5 @@ export const login = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: err.message });
-  }
-};
-
-// update user  details
-export const update = async (req, res) => {
-  try {
-    // update details
-    // console.log("Request user", req.user);
-    const { firstName, middleName, lastName, email, department } = req.body;
-    const userId = req.params.id;
-
-    // check if user exists
-    const user = await User.findOne({ _id: userId, role: "user" });
-
-    if (!user) {
-      return res.status(400).json({ error: "User not found!" });
-    }
-    // to be updated field values
-    let setQuery = {};
-    // old field values
-    let fieldOldValue = {};
-
-    console.log("existing user: ", user);
-
-    if (firstName) {
-      setQuery.firstName = firstName;
-      console.log("user.firstname: ", user.firstName);
-      fieldOldValue.firstName = req.user.firstName;
-    }
-    if (middleName) {
-      setQuery.middleName = middleName;
-      fieldOldValue.middleName = user.middleName;
-    }
-    if (lastName) {
-      setQuery.lastName = lastName;
-      fieldOldValue.lastName = user.lastName;
-    }
-    if (email) {
-      setQuery.email = email;
-      fieldOldValue.email = user.email;
-    }
-    if (department) {
-      setQuery.department = department;
-      fieldOldValue.department = user.department;
-    }
-
-    console.log("Set query", setQuery);
-    console.log("Field old value", fieldOldValue);
-    // req.user - is the user updating other profile.
-    // save in activity log
-    const activityLog = new ActivityLog({
-      userId: req.user._id,
-      username: req.user.firstName,
-      fieldNewValue: setQuery,
-      fieldOldValue: fieldOldValue,
-    });
-    await activityLog.save();
-    console.log("Activity log", activityLog);
-    User.updateOne(
-      { _id: userId, role: "user" },
-      { $set: setQuery },
-      (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        return res.json({ message: "User updated successfully" });
-      }
-    );
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-  }
-};
-
-// admins updating admin
-
-export const updateAdmin = async (req, res) => {
-  try {
-    // update details
-    // console.log("Request user", req.user);
-    const { firstName, middleName, lastName, email, department } = req.body;
-    const userId = req.params.id;
-
-    // check if user exists
-    const user = await User.findOne({ _id: userId, role: "admin" });
-
-    if (!user) {
-      return res.status(400).json({ error: "Admin not found!" });
-    }
-    // to be updated field values
-    let setQuery = {};
-    // old field values
-    let fieldOldValue = {};
-
-    console.log("existing user: ", user);
-
-    if (firstName) {
-      setQuery.firstName = firstName;
-      console.log("user.firstname: ", user.firstName);
-      fieldOldValue.firstName = req.user.firstName;
-    }
-    if (middleName) {
-      setQuery.middleName = middleName;
-      fieldOldValue.middleName = user.middleName;
-    }
-    if (lastName) {
-      setQuery.lastName = lastName;
-      fieldOldValue.lastName = user.lastName;
-    }
-    if (email) {
-      setQuery.email = email;
-      fieldOldValue.email = user.email;
-    }
-    if (department) {
-      setQuery.department = department;
-      fieldOldValue.department = user.department;
-    }
-
-    console.log("Set query", setQuery);
-    console.log("Field old value", fieldOldValue);
-    // req.user - is the user updating other profile.
-    // save in activity log
-    const activityLog = new ActivityLog({
-      userId: req.user._id,
-      username: req.user.firstName,
-      fieldNewValue: setQuery,
-      fieldOldValue: fieldOldValue,
-    });
-    await activityLog.save();
-    console.log("Activity log", activityLog);
-    User.updateOne(
-      { _id: userId, role: "user" },
-      { $set: setQuery },
-      (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        return res.json({ message: "Admin updated successfully" });
-      }
-    );
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-  }
-};
-
-//   View users
-
-export const view = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await User.findOne({ _id: userId, role: "user" }).select({
-      firstName: 1,
-      middleName: 1,
-      lastName: 1,
-      email: 1,
-      department: 1,
-    });
-
-    if (!user) {
-      return res.status(400).json({ error: "User not found!" });
-    }
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-  }
-};
-
-// admins viewing admins
-
-export const viewAdmins = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    console.log("USER ID ", userId);
-    const user = await User.findOne({ _id: userId, role: "admin" }).select({
-      firstName: 1,
-      middleName: 1,
-      lastName: 1,
-      email: 1,
-      department: 1,
-      role: 1,
-    });
-
-    if (!user) {
-      return res.status(400).json({ error: "Admin not found!" });
-    }
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ err: err.message });
   }
 };
